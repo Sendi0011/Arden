@@ -43,7 +43,7 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-md">
+      <nav className="sticky  top-0 z-[990] border-b border-border bg-background/95 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group hover:opacity-80 transition-opacity">
             <Image src="/logo.png" alt="Arden Logo" width={32} height={32} />
@@ -110,8 +110,8 @@ export function Navbar() {
       </nav>
 
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-20 bg-background/80 backdrop-blur-lg lg:hidden" onClick={() => setIsMobileMenuOpen(false)}>
-          <div className="fixed top-16 right-0 bottom-0 w-full max-w-xs bg-card border-l border-border p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[998] bg-background/80 lg:hidden" onClick={() => setIsMobileMenuOpen(false)}>
+          <div className="fixed top-16 right-0 bottom-0 z-[999] w-full max-w-xs bg-card border-l border-border p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex flex-col gap-4">
               {links.map(({ href, label, icon: Icon }) => (
                 <Link
