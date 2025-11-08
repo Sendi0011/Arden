@@ -1,5 +1,4 @@
 import { campaigns } from "@/data/campaign"
-import { Campaign } from "@/types/campaign"
 import { notFound } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"

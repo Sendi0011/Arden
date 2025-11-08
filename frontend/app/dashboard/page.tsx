@@ -10,18 +10,13 @@ import { CampaignCard } from "@/components/campaign-card"
 import { Modal } from "@/components/modal"
 import { AlertBox } from "@/components/alert-box"
 import { campaigns } from "@/data/campaign"
-import { Wrench, User, PlusCircle, BadgeCheck, Search, AlertCircle, LogOut } from "lucide-react"
+import { Wrench, User, PlusCircle, BadgeCheck, Search, AlertCircle, LogOut, Trash2} from "lucide-react"
 import { validateRequired, validateNumber, validateMinLength } from "@/lib/validation"
 import { useLocalStorage } from "@/hooks/use-localStorage"
 import { useRouter } from "next/navigation"
 import { usePrivy } from "@privy-io/react-auth"
 
-interface CampaignData {
-  title: string
-  description: string
-  reward: string
-  maxParticipants: string
-}
+import { CampaignData } from "@/types/dashboard"
 
 export default function Dashboard() {
   const router = useRouter()
@@ -36,7 +31,7 @@ export default function Dashboard() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [isShaking, setIsShaking] = useState(false)
-  const [formData, setFormData] = useState<CampaignData>({
+  const [formData, setFormData] = useState<Omit<CampaignData, "id">>({
     title: "",
     description: "",
     reward: "",
@@ -88,7 +83,8 @@ export default function Dashboard() {
     await new Promise((resolve) => setTimeout(resolve, 800))
     setIsLoading(false)
 
-    setCreatedCampaigns([...createdCampaigns, formData])
+    const newCampaign = { ...formData, id: (createdCampaigns.length + 1).toString() }
+    setCreatedCampaigns([...createdCampaigns, newCampaign])
     setIsCreateModalOpen(false)
     setFormData({ title: "", description: "", reward: "", maxParticipants: "" })
     setFormErrors({})
@@ -101,7 +97,9 @@ export default function Dashboard() {
     setTimeout(() => setAlert({ isVisible: false, message: "", variant: "success" }), 5000)
   }
 
-  const handleJoinCampaign = (campaignId: string) => {
+  const handleJoinCampaign = (e: React.MouseEvent, campaignId: string) => {
+    e.stopPropagation()
+    e.preventDefault()
     if (!joinedCampaigns.includes(campaignId)) {
       setJoinedCampaigns([...joinedCampaigns, campaignId])
       setAlert({
@@ -111,6 +109,18 @@ export default function Dashboard() {
       })
       setTimeout(() => setAlert({ isVisible: false, message: "", variant: "success" }), 5000)
     }
+  }
+
+  const handleLeaveCampaign = (e: React.MouseEvent, campaignId: string) => {
+    e.stopPropagation()
+    e.preventDefault()
+    setJoinedCampaigns(joinedCampaigns.filter((id) => id !== campaignId))
+    setAlert({
+      isVisible: true,
+      message: "You have left the campaign.",
+      variant: "success",
+    })
+    setTimeout(() => setAlert({ isVisible: false, message: "", variant: "success" }), 5000)
   }
 
   const handleLogout = async () => {
@@ -212,7 +222,7 @@ export default function Dashboard() {
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredCampaigns.map((campaign, idx) => (
-                <AnimatedSection key={campaign.id} delay={idx * 0.05}>
+                <AnimatedSection key={campaign.id} delay={idx * 0.02}>
                   <CampaignCard
                     id={campaign.id}
                     title={campaign.campaignName}
@@ -221,7 +231,8 @@ export default function Dashboard() {
                     participants={campaign.taskCounter} // Using taskCounter as a placeholder for participants
                     reward={campaign.totalBudget.toString()} // Using totalBudget as a placeholder for reward
                     isJoined={joinedCampaigns.includes(campaign.id)}
-                    onAction={() => handleJoinCampaign(campaign.id)}
+                    onJoin={(e) => handleJoinCampaign(e, campaign.id)}
+                    onLeave={(e) => handleLeaveCampaign(e, campaign.id)}
                   />
                 </AnimatedSection>
               ))}
@@ -246,42 +257,42 @@ export default function Dashboard() {
               </button>
             </div>
 
-            {createdCampaigns.length > 0 && (
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold mb-4">Your Created Campaigns</h3>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {createdCampaigns.map((campaign, idx) => (
-                    <AnimatedSection key={idx} delay={idx * 0.05}>
-                      <div className="bg-card border border-accent/30 rounded-lg p-6">
-                        <h4 className="font-semibold mb-2 text-foreground">{campaign.title}</h4>
-                        <p className="text-sm text-muted-foreground mb-4">{campaign.description}</p>
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-accent">{campaign.reward}</span>
-                          <span className="text-muted-foreground">Max: {campaign.maxParticipants}</span>
-                        </div>
-                      </div>
-                    </AnimatedSection>
-                  ))}
-                </div>
+            {createdCampaigns.length > 0 ? (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {createdCampaigns.map((campaign) => (
+                  <AnimatedSection key={campaign.id} delay={0}>
+                    <CampaignCard
+                      id={campaign.id}
+                      title={campaign.title}
+                      description={campaign.description}
+                      icon={<Wrench size={24} />}
+                      participants={0}
+                      reward={campaign.reward}
+                      isBuilder={true}
+                      onJoin={(e) => {
+                        e.stopPropagation()
+                        e.preventDefault()
+                      }}
+                      onLeave={(e) => {
+                        e.stopPropagation()
+                        e.preventDefault()
+                      }}
+                    />
+                  </AnimatedSection>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 border-2 border-dashed border-border rounded-lg">
+                <p className="text-muted-foreground mb-2">You haven&apos;t created any campaigns yet.</p>
+                <button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="inline-flex items-center gap-2 text-primary font-semibold hover:underline"
+                >
+                  <PlusCircle size={18} />
+                  Create your first campaign
+                </button>
               </div>
             )}
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {campaigns.map((campaign, idx) => (
-                <AnimatedSection key={campaign.id} delay={idx * 0.05}>
-                  <CampaignCard
-                    id={campaign.id}
-                    title={campaign.campaignName}
-                    description={campaign.tasks[0]?.description || "No description available."}
-                    icon={<Wrench size={24} />} // Placeholder icon
-                    participants={campaign.taskCounter} // Using taskCounter as a placeholder for participants
-                    reward={campaign.totalBudget.toString()} // Using totalBudget as a placeholder for reward
-                    onAction={() => {}}
-                    isBuilder={true}
-                  />
-                </AnimatedSection>
-              ))}
-            </div>
           </AnimatedSection>
         )}
 
