@@ -66,7 +66,7 @@ function WalletModalContent({ isOpen, onClose }: WalletModalProps) {
               animate="visible"
               exit="exit"
               transition={{ type: "spring", damping: 20, stiffness: 300 }}
-              className="fixed inset-y-0 right-0 w-full max-w-md bg-card border-l border-border shadow-2xl z-50"
+              className="fixed inset-y-0 right-0 top-16 w-full max-w-md bg-card border-l border-border shadow-2xl z-50"
             >
               <div className="p-6 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-3">
