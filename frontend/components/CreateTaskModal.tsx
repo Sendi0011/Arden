@@ -65,6 +65,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ isOpen, onClos
       title: formData.title,
       description: formData.description,
       reward: parseFloat(formData.reward),
+      completed: false, // Initialize completed to false
     })
     setFormData({ title: "", description: "", reward: "" })
     setFormErrors({})

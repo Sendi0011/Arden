@@ -12,7 +12,7 @@ import { AlertBox } from "@/components/alert-box"
 import { campaigns } from "@/data/campaign"
 import { FilterDropdown } from "@/components/filter-dropdown"
 import { ProfileModal } from "@/components/ProfileModal"
-import { Wrench, User, PlusCircle, BadgeCheck, Search, AlertCircle, LogOut} from "lucide-react"
+import { Wrench, User, PlusCircle, BadgeCheck, Search, AlertCircle, LogOut, Globe} from "lucide-react"
 import { validateRequired, validateNumber, validateUrl, validateFutureDatetime } from "@/lib/validation"
 import { useLocalStorage } from "@/hooks/use-localStorage"
 import { useRouter } from "next/navigation"
@@ -24,6 +24,7 @@ import { DiscoverCampaignDetailsModal } from "@/components/DiscoverCampaignDetai
 
 interface CampaignFormData {
   campaignName: string
+  description: string // New field
   dappLink: string
   totalBudget: string
   campaignEndTime: string
@@ -47,6 +48,7 @@ export default function Dashboard() {
   const [isShaking, setIsShaking] = useState(false)
   const [formData, setFormData] = useState<CampaignFormData>({
     campaignName: "",
+    description: "", // Initialize new field
     dappLink: "",
     totalBudget: "",
     campaignEndTime: "",
@@ -56,6 +58,27 @@ export default function Dashboard() {
   const [selectedOwnedCampaign, setSelectedOwnedCampaign] = useState<Campaign | null>(null); // New state
   const [isDiscoverCampaignModalOpen, setIsDiscoverCampaignModalOpen] = useState(false); // New state
   const [selectedDiscoverCampaign, setSelectedDiscoverCampaign] = useState<Campaign | null>(null); // New state
+
+  // Effect to disable body scroll when any modal is open
+  useEffect(() => {
+    const anyModalOpen =
+      isCreateModalOpen ||
+      isLogoutModalOpen ||
+      isProfileModalOpen ||
+      isOwnedCampaignModalOpen ||
+      isDiscoverCampaignModalOpen;
+
+    if (anyModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    // Cleanup function to re-enable scroll when component unmounts or dependencies change
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isCreateModalOpen, isLogoutModalOpen, isProfileModalOpen, isOwnedCampaignModalOpen, isDiscoverCampaignModalOpen]);
 
   useEffect(() => {
     if (ready && !authenticated) {
@@ -77,6 +100,8 @@ export default function Dashboard() {
 
       if (campaignNameError) newErrors[campaignNameError.field] = campaignNameError.message
 
+      const descriptionError = validateRequired(formData.description, "Description") // Validate description
+      if (descriptionError) newErrors[descriptionError.field] = descriptionError.message
   
 
       const dappLinkError = validateUrl(formData.dappLink, "DApp Link")
@@ -124,12 +149,17 @@ export default function Dashboard() {
       slug: "", // Initialize slug with an empty string or a temporary value
       factory: "0x0000000000000000000000000000000000000000", // Placeholder
       campaignName: formData.campaignName,
+      description: formData.description, // Add description to new campaign
+      owner: user?.id || "", // Initialize owner with user ID
       dappLink: formData.dappLink,
       totalBudget: parseFloat(formData.totalBudget),
+      currentAmount: 0, // Initialize currentAmount
+      targetAmount: parseFloat(formData.totalBudget), // Initialize targetAmount
       remainingBudget: parseFloat(formData.totalBudget),
       campaignEndTime: new Date(formData.campaignEndTime).getTime() / 1000,
       isActive: true,
       taskCounter: 0,
+      backers: 0, // Initialize backers
       tasks: [],
     }
     newCampaign.slug = slugify(newCampaign.campaignName) + "-" + newCampaign.id; // Assign correct slug
@@ -137,6 +167,7 @@ export default function Dashboard() {
     setIsCreateModalOpen(false)
     setFormData({
       campaignName: "",
+      description: "", // Clear description field
       dappLink: "",
       totalBudget: "",
       campaignEndTime: "",
@@ -190,16 +221,6 @@ export default function Dashboard() {
     }
   }
 
-  const handleUpdateCreatedCampaign = (updatedCampaign: Campaign) => {
-    setCreatedCampaigns((prev) =>
-      prev.map((c) => (c.id === updatedCampaign.id ? updatedCampaign : c))
-    );
-  };
-
-  const handleDeleteCreatedCampaign = (campaignId: string) => {
-    setCreatedCampaigns((prev) => prev.filter((c) => c.id !== campaignId));
-  };
-
   const allAvailableCampaigns = useMemo(() => {
     const combined = [...campaigns, ...createdCampaigns];
     const uniqueCampaigns = Array.from(new Set(combined.map(item => item.id)))
@@ -235,10 +256,14 @@ export default function Dashboard() {
     )
   }
 
+  const handleUpdateSelectedOwnedCampaign = (updatedCampaign: Campaign) => {
+    setSelectedOwnedCampaign(updatedCampaign);
+  };
+
   return (
     <>
       <Navbar />
-      <main className="min-h-screen max-w-7xl mx-auto px-6 py-12">
+      <main className="min-h-screen max-w-7xl mx-auto px-6 py-12 overflow-y-auto custom-scrollbar">
         <AnimatedSection className="mb-12 p-6 bg-card border border-border rounded-lg">
           <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
             <div>
@@ -316,10 +341,11 @@ export default function Dashboard() {
                       setIsDiscoverCampaignModalOpen(true);
                     }}
                     title={campaign.campaignName}
-                    description={campaign.tasks[0]?.description || "No description available."}
-                    icon={<Wrench size={24} />}
+                    description={campaign.description || "No description available."}
+                    icon={<Globe size={24} />}
                     participants={campaign.taskCounter}
                     reward={campaign.totalBudget.toString()}
+                    taskCount={campaign.taskCounter} // Pass taskCount
                     isJoined={joinedCampaigns.includes(campaign.id)}
                     onJoin={(e) => handleJoinCampaign(e, campaign.id)}
                     onLeave={(e) => handleLeaveCampaign(e, campaign.id)}
@@ -358,10 +384,11 @@ export default function Dashboard() {
                         setIsOwnedCampaignModalOpen(true);
                       }}
                       title={campaign.campaignName}
-                      description={campaign.dappLink}
+                      description={campaign.description || campaign.dappLink}
                       icon={<Wrench size={24} />}
                       participants={campaign.taskCounter}
                       reward={(campaign.totalBudget ?? 0).toString()}
+                      taskCount={campaign.taskCounter} // Pass taskCount
                       isBuilder={true}
                       onJoin={(e) => {
                         e.stopPropagation()
@@ -413,6 +440,26 @@ export default function Dashboard() {
                 <div className="flex items-center gap-2 mt-1.5 text-red-400 text-sm">
                   <AlertCircle size={14} />
                   {formErrors.campaignName}
+                </div>
+              )}
+            </div>
+
+            <div className={isShaking && formErrors.description ? 'shake' : ''}>
+              <label className="text-sm font-semibold text-foreground block mb-2">Campaign Description</label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                placeholder="Describe your campaign in detail"
+                rows={3}
+                className={`w-full px-3 py-2 bg-card border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none transition-colors resize-none ${
+                  formErrors.description ? "border-red-500" : "border-border focus:border-accent"
+                }`}
+              />
+              {formErrors.description && (
+                <div className="flex items-center gap-2 mt-1.5 text-red-400 text-sm">
+                  <AlertCircle size={14} />
+                  {formErrors.description}
                 </div>
               )}
             </div>
@@ -539,8 +586,7 @@ export default function Dashboard() {
           isOpen={isOwnedCampaignModalOpen}
           onClose={() => setIsOwnedCampaignModalOpen(false)}
           campaign={selectedOwnedCampaign}
-          onUpdateCampaign={handleUpdateCreatedCampaign}
-          onDeleteCampaign={handleDeleteCreatedCampaign}
+          onUpdateCampaign={handleUpdateSelectedOwnedCampaign}
         />
 
         <AlertBox

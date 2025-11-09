@@ -3,7 +3,7 @@
 import Link from "next/link"
 import type { ReactNode } from "react"
 import { motion } from "framer-motion"
-import { Users, Award, PlusCircle, XCircle } from "lucide-react"
+import { Users, Award, PlusCircle, XCircle, ListChecks } from "lucide-react" // Added ListChecks
 
 interface CampaignCardProps {
   id: string
@@ -13,6 +13,7 @@ interface CampaignCardProps {
   icon: ReactNode
   participants: number
   reward: string
+  taskCount: number // New prop
   isJoined?: boolean
   onJoin: (e: React.MouseEvent) => void
   onLeave: (e: React.MouseEvent) => void
@@ -28,6 +29,7 @@ export function CampaignCard({
   icon,
   participants,
   reward,
+  taskCount, // New prop
   isJoined = false,
   onJoin,
   onLeave,
@@ -82,6 +84,10 @@ export function CampaignCard({
           <div className="flex items-center gap-1">
             <Award size={16} />
             <span>{reward}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <ListChecks size={16} />
+            <span>{taskCount} Tasks</span>
           </div>
         </div>
       </motion.div>

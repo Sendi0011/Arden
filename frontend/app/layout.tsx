@@ -4,6 +4,8 @@ import "./globals.css"
 
 
 
+import type { Metadata } from "next";
+
 export const metadata: Metadata = {
   title: "Arden - Find Your First Users",
   description: "Arden helps new builders find their first real users via incentivized campaigns",

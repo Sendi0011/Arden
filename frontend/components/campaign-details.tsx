@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { Campaign, Task } from "@/types/campaign"
-import { CampaignData } from "@/types/dashboard"
 import {
   Calendar,
   DollarSign,
@@ -13,8 +12,7 @@ import {
   Users,
   ArrowLeft,
   PartyPopper,
-  Edit,
-  Trash2,
+  // Removed Edit, Trash2, PlusCircle
   Target,
   Trophy,
 } from "lucide-react"
@@ -22,12 +20,18 @@ import Link from "next/link"
 import { useLocalStorage } from "@/hooks/use-localStorage"
 import { AnimatedSection } from "@/components/animated-section"
 import { AlertBox } from "@/components/alert-box"
+// Removed CreateTaskModal, EditCampaignModal
 
 export const CampaignDetails = ({ campaign }: { campaign: Campaign }) => {
   const [alert, setAlert] = useState({ isVisible: false, message: "", variant: "success" as "success" | "error" })
-  const [createdCampaigns] = useLocalStorage<CampaignData[]>("createdCampaigns", [])
-  const isCreator = useState(() => {
-    const found = createdCampaigns.find((c) => c.id === campaign.id)
+  // Removed createdCampaigns state
+  const [joinedCampaigns, setJoinedCampaigns] = useLocalStorage<Campaign[]>("joinedCampaigns", [])
+  // Removed isCreateTaskModalOpen, isEditCampaignModalOpen states
+
+  // Removed isCreator state
+
+  const isJoined = useState(() => {
+    const found = joinedCampaigns.find((c) => c.id === campaign.id)
     return !!found
   })[0]
 
@@ -39,13 +43,26 @@ export const CampaignDetails = ({ campaign }: { campaign: Campaign }) => {
     })
 
   const handleJoinCampaign = () => {
+    setJoinedCampaigns((prev) => [...prev, campaign]);
     setAlert({
       isVisible: true,
-      message: "🎉 Welcome aboard! Check your email for next steps.",
+      message: "🎉 Welcome aboard! You have joined the campaign.",
       variant: "success",
-    })
-    setTimeout(() => setAlert({ isVisible: false, message: "", variant: "success" }), 5000)
-  }
+    });
+    setTimeout(() => setAlert({ isVisible: false, message: "", variant: "success" }), 5000);
+  };
+
+  const handleLeaveCampaign = () => {
+    setJoinedCampaigns((prev) => prev.filter((c) => c.id !== campaign.id));
+    setAlert({
+      isVisible: true,
+      message: "👋 You have left the campaign.",
+      variant: "success",
+    });
+    setTimeout(() => setAlert({ isVisible: false, message: "", variant: "success" }), 5000);
+  };
+
+  // Removed handleAddTask, handleEditCampaign, handleDeleteCampaign functions
 
   return (
     <main className="min-h-screen max-w-7xl mx-auto px-6 py-12">
@@ -70,17 +87,15 @@ export const CampaignDetails = ({ campaign }: { campaign: Campaign }) => {
             </p>
           </div>
 
-          {isCreator ? (
-            <div className="flex gap-2">
-              <button className="flex items-center gap-2 px-4 py-3 bg-accent text-accent-foreground rounded-xl shadow hover:opacity-90 transition-opacity font-semibold">
-                <Edit size={20} />
-                Edit
-              </button>
-              <button className="flex items-center gap-2 px-4 py-3 bg-destructive text-destructive-foreground rounded-xl shadow hover:opacity-90 transition-opacity font-semibold">
-                <Trash2 size={20} />
-                Delete
-              </button>
-            </div>
+          {/* Only Join/Leave buttons for non-creators */}
+          {isJoined ? (
+            <button
+              onClick={handleLeaveCampaign}
+              className="flex items-center gap-2 px-5 py-3 bg-red-500 text-white rounded-xl shadow-md hover:shadow-lg hover:scale-[1.02] transition-all font-semibold"
+            >
+              <XCircle size={20} />
+              Leave Campaign
+            </button>
           ) : (
             <button
               onClick={handleJoinCampaign}
@@ -171,12 +186,13 @@ export const CampaignDetails = ({ campaign }: { campaign: Campaign }) => {
         onClose={() => setAlert({ isVisible: false, message: "", variant: "success" })}
         variant={alert.variant}
       />
+
+      {/* Removed CreateTaskModal and EditCampaignModal */}
     </main>
   )
 }
 
-// ✅ Supporting Mini Components
-
+// ✅ Supporting Mini Components (InfoItem and TaskCard remain)
 const InfoItem = ({
   icon,
   label,
