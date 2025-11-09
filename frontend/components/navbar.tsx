@@ -9,12 +9,15 @@ import { usePrivy } from "@privy-io/react-auth"
 import { WalletModal } from "./wallet-modal"
 import { useLocalStorage } from "@/hooks/use-localStorage"
 
+import { LogoutModal } from "./LogoutModal"
+
 export function Navbar() {
   const pathname = usePathname()
   const { ready, authenticated, user, login, logout } = usePrivy()
   const [isWalletOpen, setIsWalletOpen] = useState(false)
-  const [isWalletConnected, setIsWalletConnected] = useLocalStorage("walletConnected", false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const links = [
     { href: "/#home", label: "Home", icon: Home },
@@ -31,6 +34,13 @@ export function Navbar() {
         element.scrollIntoView({ behavior: "smooth" })
       }
     }
+  }
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true)
+    await logout()
+    setIsLoggingOut(false)
+    setIsLogoutModalOpen(false)
   }
 
   useEffect(() => {
@@ -84,19 +94,11 @@ export function Navbar() {
 )}
 
               <button
-                onClick={authenticated ? logout : login}
-                disabled={!ready}
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity font-medium"
-              >
-                {authenticated ? <LogOut size={18} /> : <LogIn size={18} />}
-                <span className="text-sm hidden md:inline">{authenticated ? "Logout" : "Login"}</span>
-              </button>
-              <button
                 onClick={() => setIsWalletOpen(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity font-medium"
               >
                 <Wallet size={18} />
-                <span className="text-sm hidden md:inline">{isWalletConnected ? "Wallet" : "Connect"}</span>
+                <span className="text-sm hidden md:inline">Wallet</span>
               </button>
             </div>
           </div>
@@ -144,14 +146,6 @@ export function Navbar() {
 )}
 
                 <button
-                  onClick={authenticated ? logout : login}
-                  disabled={!ready}
-                  className="flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity font-medium"
-                >
-                  {authenticated ? <LogOut size={18} /> : <LogIn size={18} />}
-                  <span className="text-sm">{authenticated ? "Logout" : "Login"}</span>
-                </button>
-                <button
                   onClick={() => {
                     setIsWalletOpen(true)
                     setIsMobileMenuOpen(false)
@@ -159,8 +153,17 @@ export function Navbar() {
                   className="flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity font-medium"
                 >
                   <Wallet size={18} />
-                  <span className="text-sm">{isWalletConnected ? "Wallet" : "Connect"}</span>
+                  <span className="text-sm">Wallet</span>
                 </button>
+                {authenticated && (
+                  <button
+                    onClick={() => setIsLogoutModalOpen(true)}
+                    className="flex items-center justify-center gap-2 px-4 py-3 bg-destructive text-destructive-foreground rounded-lg hover:opacity-90 transition-opacity font-medium"
+                  >
+                    <LogOut size={18} />
+                    <span className="text-sm">Logout</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -170,8 +173,12 @@ export function Navbar() {
       <WalletModal
         isOpen={isWalletOpen}
         onClose={() => setIsWalletOpen(false)}
-        onConnect={setIsWalletConnected}
-        isConnected={isWalletConnected}
+      />
+      <LogoutModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={handleLogout}
+        isLoggingOut={isLoggingOut}
       />
     </>
   )

@@ -37,14 +37,14 @@ export function Modal({ isOpen, onClose, title, icon, children, size = "md" }: M
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 z-40"
+            className="fixed inset-0 mt-10 bg-black/60 z-40"
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", damping: 20, stiffness: 300 }}
-            className={`fixed max-sm:inset-x-4 max-sm:top-16 max-sm:h-[calc(100vh-8rem)] sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-full ${maxWidthClass} bg-card rounded-lg shadow-2xl z-50`}
+            className={`fixed max-md:inset-x-4 max-md:top-16 max-md:h-[calc(100vh-8rem)] md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full ${maxWidthClass} bg-card rounded-lg shadow-2xl z-50`}
           >
             <div className="flex items-center justify-between p-6 border-b border-border">
               <div className="flex items-center gap-3">
@@ -55,7 +55,7 @@ export function Modal({ isOpen, onClose, title, icon, children, size = "md" }: M
                 <X size={20} />
               </button>
             </div>
-            <div className="p-6 overflow-y-auto max-h-[calc(100vh-12rem)] sm:max-h-[80vh]">{children}</div>
+            <div className="p-6 overflow-y-auto max-h-[calc(100vh-12rem)] md:max-h-[80vh]">{children}</div>
           </motion.div>
         </>
       )}
